@@ -76,6 +76,28 @@ public class EventCategoryOptValidationHook
         checkNotNull( program, TrackerImporterAssertErrors.PROGRAM_CANT_BE_NULL );
         checkNotNull( event, TrackerImporterAssertErrors.EVENT_CANT_BE_NULL );
 
+        // DHIS2-12460
+        // event
+        // "program": "kla3mAPgvCH",
+        // "attributeCategoryOptions": "CW81uF03hvV",
+        // is a valid category option of the Category "Implementing Partner"
+        // which is a valid category of the Category Combination "Implementing
+        // Partner"
+        // which is the Category combination of the referenced program
+        // It seems to me that we have all the required information to determine
+        // that the given
+        // attributeCategoryOptions value is valid
+
+        // Why are we fetching the categoryOptionCombo out of some cache using
+        // the event uid. What if its a new
+        // event. It could only be the default then. No?
+
+        // Should the cache or the preheat not contain something where we can
+        // say .get(attributeCategoryOptions) and we
+        // get something back that allows us to compare it to the program
+        // reference? If they are not equal it means the
+        // event contains an option that is invalid.
+
         CategoryOptionCombo categoryOptionCombo = reporter.getValidationContext()
             .getCachedEventCategoryOptionCombo( event.getUid() );
 
