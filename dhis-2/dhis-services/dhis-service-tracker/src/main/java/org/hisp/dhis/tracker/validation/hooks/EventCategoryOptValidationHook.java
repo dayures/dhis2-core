@@ -103,6 +103,8 @@ public class EventCategoryOptValidationHook
 
         checkNotNull( categoryOptionCombo, TrackerImporterAssertErrors.CATEGORY_OPTION_COMBO_CANT_BE_NULL );
 
+        // TODO(DHIS2-12460) it fails here
+        // how could I fix it with the information we have?
         if ( categoryOptionCombo.isDefault()
             && program.getCategoryCombo() != null
             && !program.getCategoryCombo().isDefault() )

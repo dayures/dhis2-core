@@ -207,27 +207,45 @@ public class PreCheckDataRelationsValidationHook
         boolean categoryOptionsIsEmpty = StringUtils.isEmpty( event.getAttributeCategoryOptions() );
 
         CategoryOptionCombo categoryOptionCombo = null;
-
+        // TODO(DHIS2-12460) oh boy :( what is the intention in all of this?
+        // attribute option combo (aoc)
+        // attribute category options (options)
+        // how many permutations?
+        // at least 4 if only considering aoc & options
+        // if we also consider whether the aoc is found in the preheat or not
+        // and whether there is a default or not
+        // we would be at 8 or 16 permutations/cases
+        // if the user provided no aoc and options then set the aoc to a default
+        // one
+        // if the user provided an aoc and options, what then?
+        // if the user provided an aoc but no options, what then?
+        // if the user provided no aoc and no options, what then?
         if ( !optionComboIsEmpty && categoryOptionsIsEmpty )
         {
             categoryOptionCombo = preheat.getCategoryOptionCombo( event.getAttributeOptionCombo() );
         }
-        else if ( !optionComboIsEmpty && program.getCategoryCombo() != null )
+        else if ( !optionComboIsEmpty || program.getCategoryCombo() != null )
         {
             categoryOptionCombo = resolveCategoryOptions( reporter, event, program, context );
         }
+        // TODO does it mean that if the COC/AOC is empty, we do not validate
+        // the options?
+        // true, but validation still fails because of the
+        // EventCategoryOptValidationHook
 
-        categoryOptionCombo = getDefault( event, preheat, optionComboIsEmpty, categoryOptionCombo );
-
+        // TODO(DHIS2-12460) why :(
+        if ( categoryOptionCombo == null )
+        {
+            categoryOptionCombo = preheat.getDefault( CategoryOptionCombo.class );
+        }
         if ( categoryOptionCombo == null )
         {
             reporter.addError( event, E1115, event.getAttributeOptionCombo() );
+            return;
         }
-        else
-        {
-            reporter.getValidationContext()
-                .cacheEventCategoryOptionCombo( event.getUid(), categoryOptionCombo );
-        }
+
+        reporter.getValidationContext()
+            .cacheEventCategoryOptionCombo( event.getUid(), categoryOptionCombo );
     }
 
     private CategoryOptionCombo resolveCategoryOptions( ValidationErrorReporter reporter, Event event, Program program,
@@ -257,31 +275,6 @@ public class PreCheckDataRelationsValidationHook
             reporter.getValidationContext().putCachedEventAOCProgramCC( cacheKey,
                 categoryOptionCombo != null ? categoryOptionCombo.getUid() : null );
         }
-        return categoryOptionCombo;
-    }
-
-    private CategoryOptionCombo getDefault( Event event, TrackerPreheat preheat, boolean aocIsEmpty,
-        CategoryOptionCombo categoryOptionCombo )
-    {
-        if ( categoryOptionCombo == null )
-        {
-            CategoryOptionCombo defaultCategoryCombo = preheat
-                .getDefault( CategoryOptionCombo.class );
-
-            if ( defaultCategoryCombo != null && !aocIsEmpty )
-            {
-                String uid = defaultCategoryCombo.getUid();
-                if ( uid.equals( event.getAttributeOptionCombo() ) )
-                {
-                    categoryOptionCombo = defaultCategoryCombo;
-                }
-            }
-            else if ( defaultCategoryCombo != null )
-            {
-                categoryOptionCombo = defaultCategoryCombo;
-            }
-        }
-
         return categoryOptionCombo;
     }
 
